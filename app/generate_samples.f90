@@ -10,7 +10,7 @@ program gwlisa__generate_samples
   ! Parameters
   !------------------------------------------------------------
   integer, parameter :: nbin    = 500
-  integer, parameter :: ncurves = 5000
+  integer, parameter :: ncurves = 1
 
   ! Bounds for the ewpt parameters
   real(wp), parameter :: pmin(5) = [ &
@@ -124,7 +124,7 @@ program gwlisa__generate_samples
   !------------------------------------------------------------
   call f%initialize(verbose=.true.)
   call f%open( &
-    "data/ewpt_general/signals_update.csv", &
+    "data/samples_test.csv", &
     n_cols = 5 + nbin, status_ok=status_ok )
 
   ! Header
@@ -147,14 +147,14 @@ program gwlisa__generate_samples
 
   call f%close(status_ok)
 
-  write(*,*) "Random signal dataset written to random_signals.csv"
+  write(*,*) "Random signal dataset written to samples_test.csv"
 block
   type(csv_file) :: ff
   logical :: ok2
 
   call ff%initialize(verbose=.true.)
   call ff%open( &
-    "data/ewpt_general/frequencies.csv", &
+    "data/frequencies.csv", &
     n_cols = 2, status_ok=ok2 )
 
   call ff%add(["bin","f  "])

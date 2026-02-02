@@ -21,7 +21,7 @@ program gwlisa__ewpt_signal
 
   call f%initialize(verbose=.true.)
   call f%open(  &
-    "data/ewpt_general/simulation_nine.csv",  &
+    "data/simulation.csv",  &
     n_cols=4, status_ok=status_ok)
   call f%add(["f0", "Db", "si", "se"])
   call f%next_row()
