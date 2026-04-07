@@ -21,4 +21,8 @@ evortran = { git="https://gitlab.com/thomas.biekoetter/evortran.git" }
 copa = { git="https://gitlab.com/thomas.biekoetter/copa.git" }
 [dev-dependencies]
 csv-fortran = { git="https://github.com/jacobwilliams/csv-fortran.git" }
+[[test]]
+name = "snr"
+source-dir = "test"
+main = "snr.f90"
 
