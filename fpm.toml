@@ -22,15 +22,19 @@ source-form = "free"
 [dependencies]
 openmp="*"
 evortran = { git="https://gitlab.com/thomas.biekoetter/evortran.git", branch="fpm13", profile="release" }
-copa = { git="https://gitlab.com/thomas.biekoetter/copa.git", profile="release" }
-
-[dev-dependencies]
-csv-fortran = { git="https://github.com/jacobwilliams/csv-fortran.git" }
 
 [[test]]
 name = "snr"
 source-dir = "test"
 main = "snr.f90"
+
+[[executable]]
+name = "copa_reconstr"
+source-dir = "app/copa"
+main = "reconstr.f90"
+[executable.dependencies]
+csv-fortran = { git="https://github.com/jacobwilliams/csv-fortran.git" }
+copa = { git="https://gitlab.com/thomas.biekoetter/copa.git", profile="release" }
 
 [features]
 debug.flags = "-fPIC -O0 -g "
