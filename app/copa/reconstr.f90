@@ -184,8 +184,8 @@ contains
 
     call run_parallel_sampler(  &
       3, log_prior, log_like,  &
-      nsteps=1000,  &
-      nthreads=8,  &
+      nsteps=1000 / 10,  &
+      nthreads=16,  &
       ranges=ranges,  &
       walkers=walkers,  &
       chains=chains,  &
