@@ -7,7 +7,9 @@ program gwlisa__app_copa_reconstr
   use gwlisa__sensitivity_curves, only : sens_curves
   use copa__parallel_sampler, only : run_parallel_sampler
   use copa__prior_functions, only : uniform_prior
+  use copa__prior_functions, only : log_uniform_prior
   use copa__store, only : store_chains
+  use copa__store, only : store_log_probs
   use, intrinsic :: ieee_arithmetic
 
 implicit none
@@ -32,6 +34,8 @@ implicit none
   real(wp), parameter :: theta_lower(3) = [Tx_lims(1), K_lims(1), betaH_lims(1)]
   real(wp), parameter :: theta_upper(3) = [Tx_lims(2), K_lims(2), betaH_lims(2)]
 
+  integer, parameter :: nthreads = 8
+  integer, parameter :: nsteps = 4000 / nthreads
   real(wp), parameter :: hugepos = 1.0e35_wp
 
 ! real(wp) :: chisqtest
@@ -168,7 +172,7 @@ contains
     real(wp), intent(in) :: theta(:)
     real(wp), intent(out) :: logp
 
-    call uniform_prior(theta, theta_lower, theta_upper, logp)
+    call log_uniform_prior(theta, theta_lower, theta_upper, logp)
 
   end subroutine log_prior
 
@@ -184,8 +188,8 @@ contains
 
     call run_parallel_sampler(  &
       3, log_prior, log_like,  &
-      nsteps=1000 / 10,  &
-      nthreads=16,  &
+      nsteps=nsteps,  &
+      nthreads=nthreads,  &
       ranges=ranges,  &
       walkers=walkers,  &
       chains=chains,  &
@@ -195,6 +199,11 @@ contains
       chains,  &
       "data/copa/reconstr/chains.npy",  &
       mode='machine')
+
+    call store_log_probs(  &
+      log_probs,  &
+      "data/copa/reconstr/log_probs.npy",  &
+      mode="machine")
 
   end subroutine infer_parameters_copa
 

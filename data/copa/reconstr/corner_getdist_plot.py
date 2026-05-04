@@ -6,15 +6,18 @@ from getdist import MCSamples
 
 
 ndim = 3
+nthreads = 8
+nsteps = int(4000 / nthreads)
 nwalkers = 50
-nthreads = 16
-nsteps = int(1000 / 10)
 
-burn_in = 100
+burn_in = 40000
 
 samples = np.fromfile('chains.npy', dtype=np.float64)
 samples = samples.reshape((nwalkers*nsteps*nthreads, ndim))
 samples = samples[burn_in:-1,:]
+
+log_probs = np.fromfile('log_probs.npy', dtype=np.float64)
+log_probs = log_probs[burn_in:-1]
 
 # mask = np.all(samples > 0, axis=1)
 # samples = samples[mask]
@@ -47,15 +50,25 @@ samples = samples[burn_in:-1,:]
 
 samples = MCSamples(
     samples=samples,
+    loglikes=log_probs,
     names=['T', 'K', 'bH'],
     labels=['T', 'K', 'b/H'])
 
+# samples.removeBurn(0.1)
+
 g = plots.get_subplot_plotter()
+
+# settings = {'fine_bins_2D': 512}  # Try 512 or higher
+# g = plots.get_single_plotter(settings=settings)
+
 g.triangle_plot(
     [samples],
     filled=True)
-samples.smooth_scale_1D = 0.1
-samples.smooth_scale_2D = 0.1
+
+# samples.smooth_scale_1D = 0.01
+# samples.smooth_scale_2D = 0.01
+
+# g.settings.smooth_scale_2D = 0.1
 
 g.export("corner_getdist.pdf")
 
