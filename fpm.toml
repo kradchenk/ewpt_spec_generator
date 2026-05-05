@@ -34,7 +34,7 @@ source-dir = "app/copa"
 main = "reconstr.f90"
 [executable.dependencies]
 csv-fortran = { git="https://github.com/jacobwilliams/csv-fortran.git" }
-copa = { git="https://gitlab.com/thomas.biekoetter/copa.git", profile="release" }
+copa = { git="https://github.com/thomasbiekoetter/copa.git", profile="release" }
 
 [features]
 debug.flags = "-fPIC -O0 -g "
