@@ -5,6 +5,7 @@ program gwlisa__app_copa_reconstr
   use gwlisa__signals_soundwave, only : spectrum_sw
   use gwlisa__signals_turbulance, only : spectrum_turb
   use gwlisa__sensitivity_curves, only : sens_curves
+  use gwlisa__app_copa_parameters
   use copa__parallel_sampler, only : run_parallel_sampler
   use copa__prior_functions, only : uniform_prior
   use copa__prior_functions, only : log_uniform_prior
@@ -12,45 +13,15 @@ program gwlisa__app_copa_reconstr
   use copa__store, only : store_log_probs
   use, intrinsic :: ieee_arithmetic
 
-implicit none
+  implicit none
 
-  ! Injected signal
-  real(wp), parameter :: K_injected = 0.5188e0_wp
-  real(wp), parameter :: Tx_injected = 80.94e0_wp
-  real(wp), parameter :: gx_injected = 110.0e0_wp
-  real(wp), parameter :: betaH_injected = 104.41e0_wp
-  real(wp), parameter :: vw_injected = 0.9e0_wp
   type(noisy_data) :: nd_injected
   type(sens_curves) :: sens
-
-  ! Sensitivity curve
-  real(wp), parameter :: A = 3.0e0_wp
-  real(wp), parameter :: P = 15.0e0_wp
-
-  ! Parameter ranges for fit
-  real(wp), parameter :: Tx_lims(2) = [1.0e0_wp, 1.0e3_wp]
-  real(wp), parameter :: K_lims(2) = [1.0e-10_wp, 1.0e0_wp - 1.0e-10_wp]
-  real(wp), parameter :: betaH_lims(2) = [10.0e0_wp, 1.0e3_wp]
-  real(wp), parameter :: theta_lower(3) = [Tx_lims(1), K_lims(1), betaH_lims(1)]
-  real(wp), parameter :: theta_upper(3) = [Tx_lims(2), K_lims(2), betaH_lims(2)]
-
-  integer, parameter :: nthreads = 8
-  integer, parameter :: nsteps = 4000 / nthreads
-  real(wp), parameter :: hugepos = 1.0e35_wp
-
-! real(wp) :: chisqtest
-! real(wp) :: thetatest(3)
+  integer :: prior_switch ! 0 = uniform, 1 = log_uniform
 
   call init_chisq()
-
-! thetatest = [80.93e0_wp, 0.52e0_wp, 104.41e0_wp]
-! call calc_chisq(thetatest, chisqtest)
-! write(*,*) chisqtest
-! thetatest = [81.0e0_wp, 0.5e0_wp, 115.0e0_wp]
-! call calc_chisq(thetatest, chisqtest)
-! write(*,*) chisqtest
-
-  call infer_parameters_copa()
+  call infer_parameters_copa(0)
+  call infer_parameters_copa(1)
 
 contains
 
@@ -172,38 +143,60 @@ contains
     real(wp), intent(in) :: theta(:)
     real(wp), intent(out) :: logp
 
-    call log_uniform_prior(theta, theta_lower, theta_upper, logp)
+    if (prior_switch == 0) then
+      call uniform_prior(theta, theta_lower, theta_upper, logp)
+    else
+      call log_uniform_prior(theta, theta_lower, theta_upper, logp)
+    end if
 
   end subroutine log_prior
 
-  subroutine infer_parameters_copa()
+  subroutine infer_parameters_copa(prior)
+
+    integer, intent(in) :: prior
 
     real(wp) :: ranges(2, 3)
     real(wp), allocatable :: walkers(:, :, :)
     real(wp), allocatable :: chains(:, :, :, :)
     real(wp), allocatable :: log_probs(:, :, :)
 
+    character(len=:), allocatable :: filepath_chains
+    character(len=:), allocatable :: filepath_loglikes
+
     ranges(1, :) = theta_lower
     ranges(2, :) = theta_upper
+
+    prior_switch = prior
 
     call run_parallel_sampler(  &
       3, log_prior, log_like,  &
       nsteps=nsteps,  &
       nthreads=nthreads,  &
+      nwalkers=nwalkers,  &
       ranges=ranges,  &
       walkers=walkers,  &
       chains=chains,  &
       log_probs=log_probs)
 
+    if (prior_switch == 0) then
+      filepath_chains = "data/copa/reconstr/chains_uniformprior"
+      filepath_loglikes = "data/copa/reconstr/loglikes_uniformprior"
+    else if (prior_switch == 1) then
+      filepath_chains = "data/copa/reconstr/chains_loguniformprior"
+      filepath_loglikes = "data/copa/reconstr/loglikes_loguniformprior"
+    end if
+
     call store_chains(  &
       chains,  &
-      "data/copa/reconstr/chains.npy",  &
-      mode='machine')
+      filepath_chains,  &
+      mode='machine',  &
+      separate=.true.)
 
     call store_log_probs(  &
       log_probs,  &
-      "data/copa/reconstr/log_probs.npy",  &
-      mode="machine")
+      filepath_loglikes,  &
+      mode='machine',  &
+      separate=.true.)
 
   end subroutine infer_parameters_copa
 

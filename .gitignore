@@ -1,7 +1,6 @@
 *.csv
 *.swp
 *.swo
-*.pdf
 external/PolyChordLite/PolyChordLite
 external/PolyChordLite/evortran
 *.npy
