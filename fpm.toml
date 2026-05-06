@@ -36,8 +36,15 @@ main = "reconstr.f90"
 csv-fortran = { git="https://github.com/jacobwilliams/csv-fortran.git" }
 copa = { git="https://github.com/thomasbiekoetter/copa.git", profile="release" }
 
+[[executable]]
+name = "evortran_reconstr"
+source-dir = "app/evortran"
+main = "reconstr.f90"
+[executable.dependencies]
+csv-fortran = { git="https://github.com/jacobwilliams/csv-fortran.git" }
+
 [features]
-debug.flags = "-fPIC -O0 -g "
+debug.flags = "-DDEBUG -fPIC -O0 -g "
 debug.gfortran.flags = "-fbounds-check -fbacktrace -Wall -Wuninitialized -fmax-errors=1 -fcheck=all -ffpe-trap=invalid,zero,overflow"
 debug.ifx.flags = "-check bounds -check pointer -traceback"
 release.flags = "-O3"

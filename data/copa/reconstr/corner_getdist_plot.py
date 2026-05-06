@@ -4,6 +4,7 @@ import glob
 import re
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
+from matplotlib.lines import Line2D
 from getdist import plots
 from getdist import MCSamples
 
@@ -26,6 +27,9 @@ def main():
     g, fig, axes = make_getdist_plot(samples_uni, samples_log)
     g, fig, axes = refine_plot(g, fig, axes)
     axes = add_injected_point(axes)
+    fig, axes = add_evortran_bestfits(fig, axes)
+    fig, axes = add_markers_to_legend(fig, axes)
+    fig, axes = add_units(fig, axes)
     g.export("corner_getdist.pdf")
 
 
@@ -41,7 +45,7 @@ def read_uniformprior_data():
         loglikes=loglikes,
         ignore_rows=burn_in,
         names=['T', 'K', 'bH'],
-        labels=['T', 'K', r'\beta / H'])
+        labels=['T~[\mathrm{GeV}]', 'K', r'\beta / H'])
     return samples
 
 
@@ -57,7 +61,7 @@ def read_loguniformprior_data():
         loglikes=loglikes,
         ignore_rows=burn_in,
         names=['T', 'K', 'bH'],
-        labels=['T', 'K', r'\beta / H'])
+        labels=[r'T~[\mathrm{GeV}]', 'K', r'\beta / H'])
     return samples
 
 
@@ -65,7 +69,7 @@ def make_getdist_plot(samples_uni, samples_log):
     g = plots.get_subplot_plotter()
     g.triangle_plot(
         [samples_uni, samples_log],
-        legend_labels=['uniform prior', 'log uniform prior'],
+        legend_labels=['copa (uniform prior)', 'copa (log uniform prior)'],
         filled=True,
         title_limit=1)
     fig = g.fig
@@ -155,70 +159,57 @@ def add_injected_point(axes):
     return axes
 
 
+def add_evortran_bestfits(fig, axes):
+    de = pd.read_csv("../../evortran/reconstr/bestinds.csv")
+    axes[1, 0].scatter(
+        de['Tx'], de['K '],
+        s=6,
+        color='magenta',
+        rasterized=True)
+    axes[2, 0].scatter(
+        de['Tx'], de['bH'],
+        s=6,
+        color='magenta',
+        rasterized=True)
+    axes[2, 1].scatter(
+        de['K '], de['bH'],
+        s=6,
+        color='magenta',
+        rasterized=True)
+    return fig, axes
+
+
+def add_markers_to_legend(fig, axes):
+    leg = fig.legends[0]
+    existing_handles = leg.legend_handles
+    existing_labels = [t.get_text() for t in leg.get_texts()]
+    new_handles = [
+        Line2D(
+            [0], [0], marker='*', color='C1',
+            linestyle='none', markersize=8, label='injected signal'),
+        Line2D(
+            [0], [0], marker='o', color='magenta',
+            linestyle='none', markersize=4, label='evortran'),
+    ]
+    new_labels = [h.get_label() for h in new_handles]
+    fig.legends.clear()
+    fig.legend(
+        frameon=False,
+        handles=existing_handles + new_handles,
+        labels=existing_labels + new_labels,
+    )
+    return fig, axes
+
+
+def add_units(fig, axes):
+    s = axes[0, 0].get_title()
+    s = s[0:-1] + r'~\mathrm{GeV}$'
+    axes[0, 0].set_title(s)
+    axes[1, 1].set_title(axes[1, 1].get_title())
+    axes[2, 2].set_title(axes[2, 2].get_title())
+    return fig, axes
+
+
 if __name__ == "__main__":
     main()
 
-
-# samples = MCSamples(
-#     samples=samples,
-#     names=['T', 'K', 'bH'],
-#     labels=['T', 'K', 'bH'])
-# samples.smooth_scale_1D = 0.1
-# samples.smooth_scale_2D = 0.1
-# 
-# g = plots.get_subplot_plotter()
-# g.triangle_plot(
-#     [samples],
-#     ["p1", "p3", "p2"],
-#     filled=True,
-#     legend_labels=["Bla"])
-# 
-# db = pd.read_csv("evortran_best_fit.csv").columns.astype(float).to_numpy()
-# 
-# fig = g.fig
-# axes = g.subplots
-# ax = axes[1, 0]
-# ax.scatter(
-#     db[0], db[2],
-#     s=200,
-#     marker='*',
-#     zorder=1000,
-#     color='magenta')
-# ax = axes[2, 0]
-# ax.scatter(
-#     db[0], db[1],
-#     s=200,
-#     marker='*',
-#     zorder=1000,
-#     color='magenta')
-# ax = axes[2, 1]
-# ax.scatter(
-#     db[2], db[1],
-#     s=200,
-#     marker='*',
-#     zorder=1000,
-#     color='magenta')
-# 
-# ax = axes[1, 0]
-# for i, c in enumerate(ax.collections):
-#     paths = c.get_paths()
-#     for j, p in enumerate(paths):
-#         v = p.vertices
-#         df = pd.DataFrame(v)
-#         df.to_csv("contour_ax_1_0_coll_" + str(i) + "_path_" + str(j) + ".csv")
-# ax = axes[2, 0]
-# for i, c in enumerate(ax.collections):
-#     paths = c.get_paths()
-#     for j, p in enumerate(paths):
-#         v = p.vertices
-#         df = pd.DataFrame(v)
-#         df.to_csv("contour_ax_2_0_coll_" + str(i) + "_path_" + str(j) + ".csv")
-# ax = axes[2, 1]
-# for i, c in enumerate(ax.collections):
-#     paths = c.get_paths()
-#     for j, p in enumerate(paths):
-#         v = p.vertices
-#         df = pd.DataFrame(v)
-#         df.to_csv("contour_ax_2_1_coll_" + str(i) + "_path_" + str(j) + ".csv")
-# 
-# g.export("corner_getdist.pdf")
