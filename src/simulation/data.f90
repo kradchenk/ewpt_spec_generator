@@ -127,7 +127,7 @@ contains
 
   function OmegaGW_hsq(this, f0) result(y)
 
-      class(noisy_data), intent(inout) :: this
+      class(noisy_data), intent(in) :: this
       real(wp), intent(in) :: f0
       real(wp) :: y
 
@@ -140,7 +140,7 @@ contains
 
   function OmegaS_hsq(this, f0) result(y)
 
-      class(noisy_data), intent(inout) :: this
+      class(noisy_data), intent(in) :: this
       real(wp), intent(in) :: f0
       real(wp) :: y
 
