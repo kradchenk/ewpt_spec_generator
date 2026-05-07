@@ -21,6 +21,8 @@ module gwlisa__simulation_data
   integer, parameter :: fnum = floor((fmax - fmin) / fdel + 1)
   integer, parameter :: num_chunks = 94
 
+  public :: construct_frequencies
+
   ! Source: [1906.09244]
   type, public :: noisy_data
     type(spectrum_sw), public :: sw
