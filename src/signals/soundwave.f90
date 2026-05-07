@@ -180,7 +180,7 @@ contains
   end function calc_Omega2
 
   function S2(this, f0) result(y)
-    class(spectrum_sw), intent(inout) :: this
+    class(spectrum_sw), intent(in) :: this
     real(wp), intent(in) :: f0
     real(wp) :: y
     real(wp) :: ff1, ff2, f2f1
@@ -200,7 +200,7 @@ contains
   end function S2
 
   function OmegaGW(this, f0) result(y)
-    class(spectrum_sw), intent(inout) :: this
+    class(spectrum_sw), intent(in) :: this
     real(wp), intent(in) :: f0
     real(wp) :: y
 
@@ -208,7 +208,7 @@ contains
   end function OmegaGW
 
   function OmegaGW_hsq(this, f0) result(y)
-    class(spectrum_sw), intent(inout) :: this
+    class(spectrum_sw), intent(in) :: this
     real(wp), intent(in) :: f0
     real(wp) :: y
 
