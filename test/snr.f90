@@ -38,4 +38,11 @@ program gwlisa__test_snr
   snr = calc_snr(sw, turb=turb, sens=sens)
   write(*,*) "SNR =", snr
 
+  snr = calc_snr(  &
+    T, alpha, betaH, geff,  &
+    vw=vw, P=P, A=A,  &
+    include_turbulence=.true.,  &
+    include_collision=.true.)
+  write(*,*) "SNR with collision =", snr
+
 end program gwlisa__test_snr
