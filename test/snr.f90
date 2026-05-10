@@ -34,9 +34,13 @@ program gwlisa__test_snr
   snr = calc_snr(sw, turb=turb)
   write(*,*) "SNR =", snr
 
+  write(*,*) turb%Omega2_hsq, turb%OmegaGW_hsq(1.0e-3_wp)
+
   sens = sens_curves(P, A)
   snr = calc_snr(sw, turb=turb, sens=sens)
   write(*,*) "SNR =", snr
+
+  write(*,*) turb%Omega2_hsq, turb%OmegaGW_hsq(1.0e-3_wp)
 
   snr = calc_snr(  &
     T, alpha, betaH, geff,  &

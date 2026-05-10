@@ -1,11 +1,9 @@
 module gwlisa__signals_turbulance
 
   use gwlisa__util_kinds, only : wp
-  use gwlisa__util_constants, only : pi
-  use gwlisa__util_constants, only : cs_default
-  use gwlisa__util_constants, only : ZP
-  use gwlisa__util_constants, only : adiab_ratio
   use gwlisa__util_constants, only : h
+  use gwlisa__util_constants, only : cs_default
+  use gwlisa__util_constants, only : eps_turb_default
   use gwlisa__signals_util, only : calc_Hx
   use gwlisa__signals_util, only : calc_kappa
   use gwlisa__signals_util, only : calc_HxRx
@@ -21,7 +19,7 @@ module gwlisa__signals_turbulance
   real(wp), parameter :: n2  = 1.0_wp
   real(wp), parameter :: n3  = -8.0/3.0_wp
   real(wp), parameter :: N  = 2.0_wp
-  
+
   ! Source [2403.03723]
   type, public :: spectrum_turb
     real(wp) :: Tx
@@ -42,7 +40,6 @@ module gwlisa__signals_turbulance
     real(wp) :: f2
     real(wp) :: Omega2_hsq
     real(wp) :: Omega2
-
   contains
     procedure, private :: calc_Hx0
     procedure, private :: calc_K
@@ -62,38 +59,50 @@ module gwlisa__signals_turbulance
 
 contains
 
-function create_spectrum_turb(  &
-  Tx, alpha, betaH, gx, vw, eps, cs) result(this)
+  function create_spectrum_turb(  &
+    Tx, alpha, betaH, gx, vw, eps, cs) result(this)
 
-  real(wp), intent(in) :: Tx
-  real(wp), intent(in) :: alpha
-  real(wp), intent(in) :: betaH
-  real(wp), intent(in) :: gx
-  real(wp), intent(in) :: vw
-  real(wp), intent(in), optional :: eps
-  real(wp), intent(in), optional :: cs
-  type(spectrum_turb) :: this
+    real(wp), intent(in) :: Tx
+    real(wp), intent(in) :: alpha
+    real(wp), intent(in) :: betaH
+    real(wp), intent(in) :: gx
+    real(wp), intent(in) :: vw
+    real(wp), intent(in), optional :: eps
+    real(wp), intent(in), optional :: cs
+    type(spectrum_turb) :: this
 
-  this%Tx    = Tx
-  this%alpha = alpha
-  this%betaH = betaH
-  this%gx    = gx
-  this%vw    = vw
+    this%Tx    = Tx
+    this%alpha = alpha
+    this%betaH = betaH
+    this%gx    = gx
+    this%vw    = vw
 
-  this%Hx0 = this%calc_Hx0()
-  this%kappa = calc_kappa(alpha, vw, this%cs)
-  this%K = this%calc_K()
-  this%HxRx = calc_HxRx(betaH, vw, this%cs)
-  this%FGW0_hsq = this%calc_FGW0_hsq()
-  this%FGW0 = this%FGW0_hsq / (h**2)
-  this%Omegas = this%calc_Omegas()
-  this%f1 = this%calc_f1()
-  this%f2 = this%calc_f2()
-  this%Omega2_hsq = this%calc_Omega2_hsq()
-  this%Omega2 = this%Omega2_hsq / (h**2)
+    if (present(cs)) then
+      this%cs = cs
+    else
+      this%cs = cs_default
+    end if
+
+    if (present(eps)) then
+      this%eps = eps
+    else
+      this%eps = eps_turb_default
+    end if
+
+    this%Hx0 = this%calc_Hx0()
+    this%kappa = calc_kappa(alpha, vw, this%cs)
+    this%K = this%calc_K()
+    this%HxRx = calc_HxRx(betaH, vw, this%cs)
+    this%FGW0_hsq = this%calc_FGW0_hsq()
+    this%FGW0 = this%FGW0_hsq / (h**2)
+    this%Omegas = this%calc_Omegas()
+    this%f1 = this%calc_f1()
+    this%f2 = this%calc_f2()
+    this%Omega2_hsq = this%calc_Omega2_hsq()
+    this%Omega2 = this%Omega2_hsq / (h**2)
 
   end function create_spectrum_turb
-  
+
   function calc_Hx0(this) result(Hx0)
     class(spectrum_turb), intent(in) :: this
     real(wp) :: Hx0
@@ -111,13 +120,13 @@ function create_spectrum_turb(  &
     real(wp) :: FGW0_hsq
     FGW0_hsq = 1.64e-5_wp * (100.0_wp / this%gx)**(1.0_wp/3.0_wp)
   end function calc_FGW0_hsq
- 
+
    function calc_Omegas(this) result(Omegas)
     class(spectrum_turb), intent(in) :: this
     real(wp) :: Omegas
     Omegas = this%eps * this%K
   end function calc_Omegas
-  
+
   function calc_f1(this) result(f1)
     class(spectrum_turb), intent(in) :: this
     real(wp) :: f1

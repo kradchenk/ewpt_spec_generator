@@ -13,5 +13,6 @@ module gwlisa__util_constants
   real(wp), public, parameter :: h = 0.678e0_wp
   real(wp), public, parameter :: c = 2.998e8_wp
   real(wp), public, parameter :: H0 = 1.0e2_wp * h * 1.0e3_wp / 3.086e22_wp
+  real(wp), public, parameter :: eps_turb_default = 0.1e0_wp
 
 end module gwlisa__util_constants
