@@ -6,6 +6,7 @@ module gwlisa__simulation_data
   use gwlisa__signals_collision, only : spectrum_coll
   use gwlisa__sensitivity_curves, only : sens_curves
   use gwlisa__util_constants, only : cs_default
+  use gwlisa__util_constants, only : eps_turb_default
   use evortran__prng_rand, only : initialize_rands
   use evortran__prng_rand, only : are_rands_initializaed
   use evortran__prng_rand, only : Gi => randnormal
@@ -78,7 +79,7 @@ contains
     if (present(ep)) then
       epss = ep
     else
-      epss = 0.5_wp
+      epss = eps_turb_default
     end if
 
     if (present(include_coll)) then
