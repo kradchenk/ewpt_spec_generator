@@ -8,7 +8,7 @@ module gwlisa__simulation_data
   use gwlisa__util_constants, only : cs_default
   use gwlisa__util_constants, only : eps_turb_default
   use evortran__prng_rand, only : initialize_rands
-  use evortran__prng_rand, only : are_rands_initializaed
+  use evortran__prng_rand, only : are_rands_initialized
   use evortran__prng_rand, only : Gi => randnormal
   use omp_lib
 
@@ -105,7 +105,7 @@ contains
     this%f = construct_frequencies()
     this%num = fnum
 
-    if (.not. are_rands_initializaed) then
+    if (.not. are_rands_initialized) then
       call initialize_rands(mode='twister')
     end if
 

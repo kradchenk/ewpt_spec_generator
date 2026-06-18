@@ -21,7 +21,7 @@ source-form = "free"
 
 [dependencies]
 openmp="*"
-evortran = { git="https://gitlab.com/thomas.biekoetter/evortran.git", branch="fpm13", profile="release" }
+evortran = { git="https://gitlab.com/thomas.biekoetter/evortran.git", profile="release" }
 
 [[test]]
 name = "snr"
