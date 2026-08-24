@@ -120,7 +120,7 @@ contains
     class(spectrum_sw), intent(in) :: this
     real(wp) :: Hx0
 
-    Hx0 = 1.65e-5 * (this%gx / 100.0e0_wp) **  &
+    Hx0 = 1.65e-5_wp * (this%gx / 100.0e0_wp) **  &
       (1.0e0_wp / 6.0e0_wp) *  &
       (this%Tx / 100.0e0_wp)
 
