@@ -50,7 +50,7 @@ contains
     real(wp) :: y
 
     y = this%P ** 2 * 1.0e-12_wp ** 2 *  &
-      (1.0e0_wp + (2.0e-6_wp / f) ** 4) *  &
+      (1.0e0_wp + (2.0e-3_wp / f) ** 4) *  &
       (2.0e0_wp * pi * f / c)**2
 
   end function psd_oms
