@@ -35,9 +35,14 @@ module gwlisa__simulation_data
     real(wp), public, allocatable :: variance(:) ! Dbari
     integer, public :: num
     logical, private :: incl_coll
+    ! Foreground amplitudes
+    real(wp), private :: logOmegaGal
+    real(wp), private :: logOmegaExt
   contains
     procedure, public :: OmegaGW_hsq
     procedure, public :: OmegaS_hsq
+    procedure, private :: OmegaGal_hsq
+    procedure, private :: OmegaExt_hsq
     procedure, private :: construct_signal
   end type noisy_data
 
@@ -49,7 +54,8 @@ contains
 
   function create_noisy_data(  &
     P, A,  &
-    Tx, alpha, betaH, gx, vw, ep, cs, include_coll) result(this)
+    Tx, alpha, betaH, gx, vw, ep, cs, include_coll, &
+    logOmegaGal, logOmegaExt) result(this)
 
     real(wp), intent(in) :: P
     real(wp), intent(in) :: A
@@ -61,11 +67,24 @@ contains
     real(wp), intent(in), optional :: ep
     real(wp), intent(in), optional :: cs
     logical, intent(in), optional :: include_coll
+    real(wp), intent(in), optional :: logOmegaGal
+    real(wp), intent(in), optional :: logOmegaExt
     type(noisy_data) :: this
 
     real(wp) :: css
     real(wp) :: epss
 
+    if (present(logOmegaGal)) then
+      this%logOmegaGal = logOmegaGal
+    else
+      this%logOmegaGal = -7.84_wp
+    end if
+
+    if (present(logOmegaExt)) then
+      this%logOmegaExt = logOmegaExt
+    else
+      this%logOmegaExt = -12.38_wp
+    end if
 
     if (present(cs)) then
       css = cs
@@ -146,6 +165,52 @@ contains
 
   end function OmegaS_hsq
 
+  function OmegaExt_hsq(this, f0) result(y)
+
+      class(noisy_data), intent(in) :: this
+      real(wp), intent(in) :: f0
+      real(wp) :: y
+      real(wp) :: OmegaExt
+
+      OmegaExt = 10.0_wp**this%logOmegaExt
+
+      y = OmegaExt * (f0 / 1.0e-3_wp)**(2.0_wp / 3.0_wp)
+
+  end function OmegaExt_hsq
+  function OmegaGal_hsq(this, f0) result(y)
+
+      class(noisy_data), intent(in) :: this
+      real(wp), intent(in) :: f0
+      real(wp) :: y
+
+      real(wp), parameter :: Tobs = 4.0_wp
+
+      real(wp), parameter :: a1 = -0.15_wp
+      real(wp), parameter :: b1 = -2.72_wp
+
+      real(wp), parameter :: ak = -0.37_wp
+      real(wp), parameter :: bk = -2.49_wp
+
+      real(wp), parameter :: nu = 1.56_wp
+      real(wp), parameter :: f2 = 6.7e-4_wp
+
+      real(wp) :: f1
+      real(wp) :: fknee
+      real(wp) :: OmegaGal
+
+      f1 = 10.0_wp**(a1 * log10(Tobs) + b1)
+      fknee = 10.0_wp**(ak * log10(Tobs) + bk)
+
+      OmegaGal = 10.0_wp**this%logOmegaGal
+
+      y = 0.5_wp * f0**3                              &
+	* (f0 / 1.0_wp)**(-7.0_wp / 3.0_wp)         &
+	* (1.0_wp + tanh((fknee - f0) / f2))        &
+	* exp(-(f0 / f1)**nu)                       &
+	* OmegaGal
+
+  end function OmegaGal_hsq
+
   subroutine construct_signal(this)
 
     class(noisy_data), intent(inout) :: this
@@ -154,23 +219,36 @@ contains
     integer :: j
     real(wp) :: f0
     real(wp) :: xGW
+    real(wp) :: xGal
+    real(wp) :: xExt
     real(wp) :: xS
+
+    real(wp) :: SGW
+    real(wp) :: SGal
+    real(wp) :: SExt
+    real(wp) :: SN
 
     !$omp parallel do  &
     !$omp IF(.NOT. omp_in_parallel())  &
     !$omp default(none)  &
-    !$omp private(i, j, xGW, xS, f0)  &
+    !$omp private(i, j, f0, xGW, xGal, xExt, xS, SGW, SGal, SExt, SN) &
     !$omp shared(this)
     do i = 1, this%num
       f0 = this%f(i)
       xGW = sqrt(this%OmegaGW_hsq(f0))
+      xGal = sqrt(this%OmegaGal_hsq(f0))
+      xExt = sqrt(this%OmegaExt_hsq(f0))
       xS = sqrt(this%OmegaS_hsq(f0))
       do j = 1, num_chunks
-        this%S(i, j) = abs(Gi(0.0e0_wp, xGW) +  &
-          (0, 1) * Gi(0.0e0_wp, xGW)) ** 2 / 2.0e0_wp
-        this%N(i, j) = abs(Gi(0.0e0_wp, xS) +  &
-          (0, 1) * Gi(0.0e0_wp, xS)) ** 2 / 2.0e0_wp
-        this%D(i, j) = this%S(i, j) + this%N(i, j)
+        SGW = abs(Gi(0.0_wp, xGW) + (0,1) * Gi(0.0_wp, xGW))**2 / 2.0_wp
+        SGal = abs(Gi(0.0_wp, xGal) + (0,1) * Gi(0.0_wp, xGal))**2 / 2.0_wp
+        SExt = abs(Gi(0.0_wp, xExt) + (0,1) * Gi(0.0_wp, xExt))**2 / 2.0_wp
+        SN = abs(Gi(0.0_wp, xS) + (0,1) * Gi(0.0_wp, xS))**2 / 2.0_wp
+
+        this%S(i,j) = SGW + SGal + SExt
+        this%N(i,j) = SN
+
+        this%D(i,j) = this%S(i,j) + this%N(i,j)
       end do
     end do
     !$omp end parallel do
@@ -181,7 +259,7 @@ contains
     !$omp private(i)  &
     !$omp shared(this)
     do i = 1, this%num
-      this%Dbar(i) = sum(this%D(i,:)) / num_chunks
+      this%Dbar(i) = sum(this%D(i,:)) / real(num_chunks, wp)
     end do
     !$omp end parallel do
 
@@ -191,7 +269,7 @@ contains
     !$omp private(i)  &
     !$omp shared(this)
     do i = 1, this%num
-      this%variance(i) = sum((this%D(i,:) - this%Dbar(i)) ** 2) / num_chunks
+      this%variance(i) = sum((this%D(i,:) - this%Dbar(i)) ** 2) / real(num_chunks, wp)
     end do
     !$omp end parallel do
 
