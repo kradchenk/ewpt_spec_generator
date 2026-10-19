@@ -28,6 +28,11 @@ name = "snr"
 source-dir = "test"
 main = "snr.f90"
 
+[[test]]
+name = "binning"
+source-dir = "test"
+main = "binning.f90"
+
 [[executable]]
 name = "copa_reconstr"
 source-dir = "app/copa"

@@ -38,6 +38,10 @@ module gwlisa__simulation_data
     real(wp), public, allocatable :: variance(:) ! Dbari
     integer, public :: num
     logical, private :: incl_coll
+    integer, public :: num_binned
+    real(wp), public, allocatable :: f_binned(:)
+    real(wp), public, allocatable :: Dbar_binned(:)
+    real(wp), public, allocatable :: variance_binned(:)
   contains
     procedure, public :: OmegaGW_hsq
     procedure, public :: OmegaS_hsq
