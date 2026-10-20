@@ -5,8 +5,8 @@ module gwlisa__simulation_binning
 
   private
 
-  real(wp), parameter :: fcut_mod = 1.0e-3_wp
-  integer, parameter :: nlog_high_mod  = 1000
+  real(wp), parameter :: fcut_mod = 1.0e-4_wp
+  integer, parameter :: nlog_high_mod  = 500
 
   public :: create_binned_spectrum
 
