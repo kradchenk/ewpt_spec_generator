@@ -17,10 +17,12 @@ module gwlisa__simulation_binning
 
   contains
 
-    subroutine likelihood_calibration(bk, Nk, Vark, R, fcut, nlog_high)
+    subroutine likelihood_calibration(bk, Nk, Vark, nbin, ink, R, fcut, nlog_high)
       real(wp), intent(out), allocatable :: bk(:)
       real(wp), intent(out), allocatable :: Nk(:)
       real(wp), intent(out), allocatable, optional :: Vark(:)
+      integer, intent(out), optional :: nbin
+      integer, intent(out), allocatable, optional :: ink(:)
       integer, intent(in), optional :: R
       real(wp), intent(in), optional :: fcut
       integer, intent(in), optional :: nlog_high
@@ -31,7 +33,7 @@ module gwlisa__simulation_binning
       type(noisy_data) :: nd
       integer :: i
       real(wp), allocatable :: Dbar(:, :)
-      integer :: nbin
+      integer :: nbin_
       real(wp), allocatable :: Vark_(:)
       integer :: t0, rate
 
@@ -44,13 +46,14 @@ module gwlisa__simulation_binning
       nlog_high_ = nlog_high_mod
       if (present(nlog_high)) nlog_high_ = nlog_higH
 
-      ! Just to get number of bins
+      ! Just to get number of bins and number of f_i per bin k (ink)
       nd = get_realisation()
-      nbin = nd%num_binned
-      allocate(Dbar(nbin, R_))
-      allocate(bk(nbin))
-      allocate(Nk(nbin))
-      allocate(Vark_(nbin))
+      nbin_ = nd%num_binned
+      allocate(Dbar(nbin_, R_))
+      allocate(bk(nbin_))
+      allocate(Nk(nbin_))
+      allocate(Vark_(nbin_))
+      if (present(ink)) ink = nd%nk_binned
 
       call system_clock(t0, rate)
       do i = 1, R_
@@ -60,25 +63,28 @@ module gwlisa__simulation_binning
         call progress_bar(i, R_, t0, rate)
       end do
 
-      do i = 1, nbin
+      do i = 1, nbin_
         bk(i) = sum(Dbar(i, :)) / R_
         Vark_(i) = sum((Dbar(i, :) - bk(i)) ** 2) / (R_ - 1.0e0_wp)
       end do
       Nk = bk ** 2 / Vark_
+
+      if (present(Vark)) Vark = Vark_
+      if (present(nbin)) nbin = nbin_
 
       contains
 
         function get_realisation() result(n)
           type(noisy_data) :: n
 
-          integer :: i
+          integer :: j
 
           n = noisy_data(P, A, 100.0e0_wp, 1.0e-5_wp, 100.0e0_wp, 100.0e0_wp, 1.0e0_wp)
 
           ! Normalize to power = 1
-          do i = 1, n%num
-            n%Dbar(i) = n%Dbar(i) / n%OmegaS_hsq(n%f(i))
-            n%variance(i) = n%variance(i) / n%OmegaS_hsq(n%f(i)) ** 2
+          do j = 1, n%num
+            n%Dbar(j) = n%Dbar(j) / n%OmegaS_hsq(n%f(j))
+            n%variance(j) = n%variance(j) / n%OmegaS_hsq(n%f(j)) ** 2
           end do
           call create_binned_spectrum(n, fcut=fcut_, nlog_high=nlog_high_)
 
@@ -160,7 +166,8 @@ module gwlisa__simulation_binning
       do i = nlow + 1, nd%num
         if (nd%variance(i) <= 0.0e0_wp) cycle
         ibin = int((log(nd%f(i)) - logf_min_high) / dlogf) + 1
-        ibin = max(1, min(nlog_high_, ibin))
+        ibin = max(1, min(nlog_high_, ibin)) + nlow
+        if ((ibin <= nlow) .or. (ibin > nbin)) error stop 'Could not assign f_i to bin.'
         weight = 1.0e0_wp / nd%variance(i)
         sum_weights(ibin) = sum_weights(ibin) + weight
         sum_f_weighted(ibin) = sum_f_weighted(ibin) + weight * nd%f(i)
