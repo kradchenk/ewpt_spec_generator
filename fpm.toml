@@ -48,6 +48,11 @@ main = "reconstr.f90"
 [executable.dependencies]
 csv-fortran = { git="https://github.com/jacobwilliams/csv-fortran.git" }
 
+[[executable]]
+name = "calibration"
+source-dir = "app/calibration"
+main = "runner.f90"
+
 [features]
 debug.flags = "-DDEBUG -fPIC -O0 -g "
 debug.gfortran.flags = "-fbounds-check -fbacktrace -Wall -Wuninitialized -fmax-errors=1 -fcheck=all -ffpe-trap=invalid,zero,overflow"
