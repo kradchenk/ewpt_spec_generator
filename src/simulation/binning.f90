@@ -166,12 +166,13 @@ module gwlisa__simulation_binning
       do i = nlow + 1, nd%num
         if (nd%variance(i) <= 0.0e0_wp) cycle
         ibin = int((log(nd%f(i)) - logf_min_high) / dlogf) + 1
-        ibin = max(1, min(nlog_high_, ibin)) + nlow
-        if ((ibin <= nlow) .or. (ibin > nbin)) error stop 'Could not assign f_i to bin.'
+        ibin = max(1, min(nlog_high_, ibin))
         weight = 1.0e0_wp / nd%variance(i)
         sum_weights(ibin) = sum_weights(ibin) + weight
         sum_f_weighted(ibin) = sum_f_weighted(ibin) + weight * nd%f(i)
         sum_Db_weighted(ibin) = sum_Db_weighted(ibin) + weight * nd%Dbar(i)
+        ibin = ibin + nlow
+        if ((ibin <= nlow) .or. (ibin > nbin)) error stop 'Could not assign f_i to bin.'
         nk(ibin) = nk(ibin) + 1
       end do
       do i = 1, nlog_high_
